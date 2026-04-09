@@ -40,24 +40,22 @@ async def fetch_rule(rule_type: str, section: str) -> dict | None:
 
 async def rule_command(interaction: discord.Interaction, rule_type: str, section: str):
     """Shared handler for /cr and /tr."""
-    await interaction.response.defer()
-
     expand = section.endswith("...")
     if expand:
         section = section[:-3]
 
+    label = rule_type.upper()
+
     try:
         data = await fetch_rule(rule_type, section)
     except Exception as e:
-        await interaction.followup.send(f"Error contacting the rules API: {e}", ephemeral=True)
+        await interaction.response.send_message(f"Error contacting the rules API: {e}", ephemeral=True)
         return
 
     if data is None:
-        label = rule_type.upper()
-        await interaction.followup.send(f"**{label} {section}** was not found.", ephemeral=True)
+        await interaction.response.send_message(f"**{label} {section}** was not found.", ephemeral=True)
         return
 
-    label = rule_type.upper()
     page_type = "crsections" if rule_type == "cr" else "trsections"
     page_url = f"{BASE_URL}/{page_type}/{data['section']}/"
     color = discord.Color.blue() if rule_type == "cr" else discord.Color.gold()
@@ -74,7 +72,7 @@ async def rule_command(interaction: discord.Interaction, rule_type: str, section
         url=page_url,
         color=color,
     )
-    await interaction.followup.send(embed=embed)
+    await interaction.response.send_message(embed=embed)
 
 
 intents = discord.Intents.default()
