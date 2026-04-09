@@ -17,7 +17,8 @@ def format_rule(data: dict, lines: list | None = None) -> str:
         lines = []
     lines.append(f"**{data['section']}** {data['text']}")
     for child in data.get("children", []):
-        format_rule(child, lines)
+        if "." in child["section"]:
+            format_rule(child, lines)
     return "\n".join(lines)
 
 
