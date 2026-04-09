@@ -49,12 +49,12 @@ async def rule_command(interaction: discord.Interaction, rule_type: str, section
     try:
         data = await fetch_rule(rule_type, section)
     except Exception as e:
-        await interaction.followup.send(f"Error contacting the rules API: {e}")
+        await interaction.followup.send(f"Error contacting the rules API: {e}", ephemeral=True)
         return
 
     if data is None:
         label = rule_type.upper()
-        await interaction.followup.send(f"**{label} {section}** was not found.")
+        await interaction.followup.send(f"**{label} {section}** was not found.", ephemeral=True)
         return
 
     label = rule_type.upper()
