@@ -57,15 +57,10 @@ async def rule_command(interaction: discord.Interaction, rule_type: str, section
     color = discord.Color.blue() if rule_type == "cr" else discord.Color.gold()
 
     description = format_rule(data)
-    truncated = False
     if len(description) > EMBED_DESCRIPTION_LIMIT:
-        description = description[: EMBED_DESCRIPTION_LIMIT - 40]
-        # Trim to the last complete line
-        description = description[: description.rfind("\n")]
-        truncated = True
-
-    if truncated:
-        description += f"\n\n*[Rule truncated — view full text on scoutscode.net]({page_url})*"
+        suffix = f"\n\n*[Rule truncated — view full text on scoutscode.net]({page_url})*"
+        cutoff = description[: EMBED_DESCRIPTION_LIMIT - len(suffix)]
+        description = cutoff[: cutoff.rfind("\n")] + suffix
 
     embed = discord.Embed(
         title=f"{label} {data['section']}",
