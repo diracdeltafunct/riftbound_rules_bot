@@ -8,17 +8,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BASE_URL = "https://scoutscode.net"
-EMBED_DESCRIPTION_LIMIT = 4096
+EMBED_LIMIT = 4096
 
 
-def format_rule(data: dict, lines: list | None = None) -> str:
-    """Flatten a rule and its children into a list of bold-section lines."""
+def format_rule(data: dict, expand: bool = False, lines: list | None = None) -> str:
+    """Format a rule as a single line, or recursively with all children if expand=True."""
+    if not expand:
+        return f"**{data['section']}** {data['text']}"
     if lines is None:
         lines = []
     lines.append(f"**{data['section']}** {data['text']}")
     for child in data.get("children", []):
-        if "." in child["section"]:
-            format_rule(child, lines)
+        format_rule(child, expand=True, lines=lines)
     return "\n".join(lines)
 
 
@@ -41,6 +42,10 @@ async def rule_command(interaction: discord.Interaction, rule_type: str, section
     """Shared handler for /cr and /tr."""
     await interaction.response.defer()
 
+    expand = section.endswith("...")
+    if expand:
+        section = section[:-3]
+
     try:
         data = await fetch_rule(rule_type, section)
     except Exception as e:
@@ -57,10 +62,10 @@ async def rule_command(interaction: discord.Interaction, rule_type: str, section
     page_url = f"{BASE_URL}/{page_type}/{data['section']}/"
     color = discord.Color.blue() if rule_type == "cr" else discord.Color.gold()
 
-    description = format_rule(data)
-    if len(description) > EMBED_DESCRIPTION_LIMIT:
+    description = format_rule(data, expand=expand)
+    if len(description) > EMBED_LIMIT:
         suffix = f"\n\n*[Rule truncated — view full text on scoutscode.net]({page_url})*"
-        cutoff = description[: EMBED_DESCRIPTION_LIMIT - len(suffix)]
+        cutoff = description[: EMBED_LIMIT - len(suffix)]
         description = cutoff[: cutoff.rfind("\n")] + suffix
 
     embed = discord.Embed(
@@ -81,13 +86,13 @@ bot = commands.Bot(
 
 
 @bot.tree.command(name="cr", description="Look up a Riftbound Comprehensive Rule")
-@app_commands.describe(section="Rule section, e.g. 703 or 703.4 or 703.4.a")
+@app_commands.describe(section="Rule section, e.g. 703 or 703.4.a — append ... to include all children")
 async def cr_command(interaction: discord.Interaction, section: str):
     await rule_command(interaction, "cr", section)
 
 
 @bot.tree.command(name="tr", description="Look up a Riftbound Tournament Rule")
-@app_commands.describe(section="Rule section, e.g. 301 or 301.1")
+@app_commands.describe(section="Rule section, e.g. 301 or 301.1 — append ... to include all children")
 async def tr_command(interaction: discord.Interaction, section: str):
     await rule_command(interaction, "tr", section)
 
