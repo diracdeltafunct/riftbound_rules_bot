@@ -56,8 +56,7 @@ async def rule_command(interaction: discord.Interaction, rule_type: str, section
         await interaction.response.send_message(f"**{label} {section}** was not found.", ephemeral=True)
         return
 
-    page_type = "crsections" if rule_type == "cr" else "trsections"
-    page_url = f"{BASE_URL}/{page_type}/{data['section']}/"
+    page_url = data.get("url", f"{BASE_URL}/trsections/{data['section']}/")
     color = discord.Color.blue() if rule_type == "cr" else discord.Color.gold()
 
     description = format_rule(data, expand=expand)
